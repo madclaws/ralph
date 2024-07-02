@@ -3,16 +3,35 @@ defmodule Ralph do
   Documentation for `Ralph`.
   """
 
-  @doc """
-  Hello world.
+  require Logger
 
-  ## Examples
+  def main(args) do
+    args
+    |> parse_options
+    |> process_options
+  end
 
-      iex> Ralph.hello()
-      :world
+  defp parse_options(args) do
+    OptionParser.parse(args,
+      switches: [],
+      aliases: []
+    )
+  end
 
-  """
-  def hello do
-    :world
+  def process_options(options) do
+    Logger.info(inspect(options))
+    display_help()
+  end
+
+  defp display_help() do
+    IO.puts("""
+
+    Usage:
+
+    ralph
+
+    """)
+
+    System.halt(0)
   end
 end

@@ -24,3 +24,7 @@ ralph-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+.vscode
+
+ralph
