@@ -2,6 +2,7 @@ defmodule Ralph do
   @moduledoc """
   Documentation for `Ralph`.
   """
+  alias Ralph.Commands
 
   require Logger
 
@@ -13,23 +14,28 @@ defmodule Ralph do
 
   defp parse_options(args) do
     OptionParser.parse(args,
-      switches: [],
-      aliases: []
+      switches: [init: :string],
+      aliases: [i: :init]
     )
   end
 
   def process_options(options) do
-    Logger.info(inspect(options))
-    display_help()
+    case options do
+      {_, ["init", path], _} ->
+        Commands.init(path)
+
+      _ ->
+        display_help()
+    end
   end
 
   defp display_help() do
     IO.puts("""
+    ralph #{Application.spec(:ralph, :vsn)}
+    A teeny-tiny version control
 
-    Usage:
-
-    ralph
-
+    USAGE:
+        ralph <SUBCOMMAND>
     """)
 
     System.halt(0)
