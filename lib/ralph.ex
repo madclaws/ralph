@@ -27,6 +27,9 @@ defmodule Ralph do
       {_, ["init", path], _} ->
         Commands.init(path)
 
+      {_, ["commit"], _} ->
+        Commands.commit()
+
       _ ->
         display_help()
     end
