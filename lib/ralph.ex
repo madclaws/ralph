@@ -11,6 +11,8 @@ defmodule Ralph do
     |> process_options
   end
 
+  @spec parse_options(list()) ::
+          {OptionParser.parsed(), OptionParser.argv(), OptionParser.errors()}
   defp parse_options(args) do
     OptionParser.parse(args,
       strict: []
@@ -18,20 +20,23 @@ defmodule Ralph do
     )
   end
 
+  @spec process_options({OptionParser.parsed(), OptionParser.argv(), OptionParser.errors()}) ::
+          any()
   def process_options(options) do
     case options do
       {_, ["init", path], _} ->
-        # Commands.init(path)
-        IO.puts("init not implemented! #{path}")
+        Commands.init(path)
 
       _ ->
         display_help()
     end
   end
 
+  @spec display_help :: any()
   defp display_help() do
     IO.puts("""
     ralph #{Application.spec(:ralph, :vsn)} #{Emojis.emojis().christmas_tree}
+
     A teeny-tiny decentralized version control
 
     USAGE:
