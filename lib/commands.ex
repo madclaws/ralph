@@ -51,8 +51,7 @@ defmodule Commands do
     |> Enum.each(fn file ->
       Workspace.read_file(Path.join([workspace_path, file]))
       |> Blob.new()
+      |> Database.store(db_path)
     end)
-
-    # IO.puts(Enum.join(files, "\n"))
   end
 end
