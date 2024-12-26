@@ -11,13 +11,14 @@ defmodule Database do
   compress
   write to correct folder
   """
-  @spec store(Object.t(), String.t()) :: any()
+  @spec store(Object.t(), String.t()) :: Object.t()
   def store(object, db_path) do
     content =
-      "#{Object.type(object)} #{byte_size(Object.data(object))}\0#{Object.data(object)}"
+      "#{Object.type(object)} #{byte_size(to_string(object))}\0#{to_string(object)}"
 
     oid = :crypto.hash(:sha, content) |> Base.encode16(case: :lower)
     write_object(oid, content, db_path)
+    %{object | oid: oid}
   end
 
   @doc """

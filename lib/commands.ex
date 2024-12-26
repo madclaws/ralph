@@ -2,6 +2,7 @@ defmodule Commands do
   @moduledoc """
   Functions for CLI commands
   """
+  alias Objects.Tree
   alias Objects.Blob
   alias Utils.Emojis
   alias Utils.Terminal
@@ -48,10 +49,16 @@ defmodule Commands do
     db_path = Path.join([ralph_path, "objects"])
 
     Workspace.list_files!(workspace_path)
-    |> Enum.each(fn file ->
-      Workspace.read_file(Path.join([workspace_path, file]))
-      |> Blob.new()
-      |> Database.store(db_path)
+    |> Enum.map(fn file ->
+      obj =
+        Workspace.read_file(Path.join([workspace_path, file]))
+        |> Blob.new()
+        |> Database.store(db_path)
+
+      {file, Object.oid(obj)}
     end)
+    |> Tree.new()
+    |> Database.store(db_path)
+    |> then(&IO.puts("tree: #{Object.oid(&1)}"))
   end
 end
