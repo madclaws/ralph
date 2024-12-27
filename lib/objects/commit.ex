@@ -27,18 +27,23 @@ defmodule Objects.Commit do
 
   defimpl String.Chars do
     def to_string(object) do
-      content = [
-        "tree #{object.tree_oid}",
-        "author #{object.author}",
-        "committer #{object.author}",
-        "",
-        object.message
-      ]
-
       if is_binary(object.parent) do
-        List.update_at(content, 1, fn _ -> "parent #{object.parent}" end)
+        [
+          "tree #{object.tree_oid}",
+          "parent #{object.parent}",
+          "author #{object.author}",
+          "committer #{object.author}",
+          "",
+          object.message
+        ]
       else
-        content
+        [
+          "tree #{object.tree_oid}",
+          "author #{object.author}",
+          "committer #{object.author}",
+          "",
+          object.message
+        ]
       end
       |> Enum.join("\n")
     end

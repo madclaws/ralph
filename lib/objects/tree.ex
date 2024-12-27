@@ -5,16 +5,16 @@ defmodule Objects.Tree do
   Tree generally saves with the detials of the blobs in
   the working directory
   """
+alias Objects.Blob
 
-  @type children :: list({name :: String.t(), oid :: String.t()})
+  @type children :: list({name :: String.t(), blob :: Blob.t()})
 
   @type t :: %__MODULE__{
           type: Object.object_type(),
           oid: String.t() | nil,
-          children: children(),
-          mode: number()
+          children: children()
         }
-  defstruct [:oid, :data, :children, type: :tree, mode: 100_644]
+  defstruct [:oid, :children, type: :tree]
 
   @spec new(children()) :: __MODULE__.t()
   def new(children) do
@@ -35,9 +35,9 @@ defmodule Objects.Tree do
   defimpl String.Chars do
     def to_string(object) do
       Enum.sort(object.children, &(elem(&1, 0) <= elem(&2, 0)))
-      |> Enum.map(fn {name, oid} ->
+      |> Enum.map(fn {name, blob} ->
         # Base.decode16! converts the 40byte oid to 20byte
-        "#{object.mode} #{name}\0" <> Base.decode16!(oid, case: :lower)
+        "#{blob.mode} #{name}\0" <> Base.decode16!(blob.oid, case: :lower)
       end)
       |> Enum.join("")
     end

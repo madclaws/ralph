@@ -53,12 +53,16 @@ defmodule Commands do
     blob_objs =
       Workspace.list_files!(workspace_path)
       |> Enum.map(fn file ->
+        data = Workspace.read_file(Path.join([workspace_path, file]))
+
+        stat = Workspace.stat_file(Path.join([workspace_path, file]))
+
+        # converting stat to a base octal integer
         obj =
-          Workspace.read_file(Path.join([workspace_path, file]))
-          |> Blob.new()
+          Blob.new(data, Integer.to_string(stat.mode, 8) |> String.to_integer())
           |> Database.store(db_path)
 
-        {file, Object.oid(obj)}
+        {file, obj}
       end)
 
     tree =
