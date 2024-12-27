@@ -67,17 +67,23 @@ defmodule Commands do
 
     author_name = System.get_env("RALPH_AUTHOR_NAME", "john doe")
     author_email = System.get_env("RALPH_AUTHOR_EMAIL", "jd@unknown.com")
+    parent = Refs.read_head(ralph_path)
 
     author =
       "#{author_name} <#{author_email}> #{DateTime.utc_now() |> Calendar.strftime("%s %z")}"
 
     commit =
-      Commit.new(Object.oid(tree), author, msg)
+      Commit.new(parent, Object.oid(tree), author, msg)
       |> Database.store(db_path)
 
-    :ok = Database.write_head(commit, ralph_path)
+    :ok = Refs.update_head(commit, ralph_path)
 
-    IO.puts("[(root-commit) #{Object.oid(commit)}] #{msg}")
+    if is_nil(parent) do
+      IO.puts("[(root-commit) #{Object.oid(commit)}] #{msg}")
+    else
+      IO.puts("[#{Object.oid(commit)}] #{msg}")
+    end
+
     System.halt(0)
   end
 end
