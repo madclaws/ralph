@@ -51,7 +51,7 @@ defmodule Commands do
     db_path = Path.join([ralph_path, "objects"])
 
     blob_objs =
-      Workspace.list_files!(workspace_path)
+      Workspace.list_files!(workspace_path, workspace_path)
       |> Enum.map(fn file ->
         data = Workspace.read_file(Path.join([workspace_path, file]))
 
@@ -64,6 +64,7 @@ defmodule Commands do
 
         {file, obj}
       end)
+      |> IO.inspect()
 
     tree =
       Tree.new(blob_objs)
