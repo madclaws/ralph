@@ -34,23 +34,27 @@ defmodule Database do
         String.slice(oid, 2..(String.length(oid) - 1))
       ])
 
-    dirname = Path.dirname(object_path)
+    if not File.exists?(object_path) do
+      dirname = Path.dirname(object_path)
 
-    temp_path = Path.join([dirname], generate_temp_obj_name())
+      temp_path = Path.join([dirname], generate_temp_obj_name())
 
-    file =
-      try do
-        File.open!(temp_path, [:read, :write, :exclusive])
-      rescue
-        _ ->
-          File.mkdir(dirname)
+      file =
+        try do
           File.open!(temp_path, [:read, :write, :exclusive])
-      end
+        rescue
+          _ ->
+            File.mkdir(dirname)
+            File.open!(temp_path, [:read, :write, :exclusive])
+        end
 
-    compressed_content = compress(content)
-    :ok = IO.binwrite(file, compressed_content)
-    File.close(file)
-    File.rename!(temp_path, object_path)
+      compressed_content = compress(content)
+      :ok = IO.binwrite(file, compressed_content)
+      File.close(file)
+      File.rename!(temp_path, object_path)
+    else
+      :ok
+    end
   end
 
   @spec generate_temp_obj_name :: String.t()
