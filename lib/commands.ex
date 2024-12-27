@@ -2,6 +2,7 @@ defmodule Commands do
   @moduledoc """
   Functions for CLI commands
   """
+  alias Objects.Commit
   alias Objects.Tree
   alias Objects.Blob
   alias Utils.Emojis
@@ -42,23 +43,41 @@ defmodule Commands do
   get cur directory
   list the files init.
   """
-  @spec commit :: any()
-  def commit do
+  @spec commit(String.t()) :: any()
+  def commit(msg) do
+    msg = msg |> String.trim()
     workspace_path = Path.expand(".")
     ralph_path = Path.join([workspace_path, ".git"])
     db_path = Path.join([ralph_path, "objects"])
 
-    Workspace.list_files!(workspace_path)
-    |> Enum.map(fn file ->
-      obj =
-        Workspace.read_file(Path.join([workspace_path, file]))
-        |> Blob.new()
-        |> Database.store(db_path)
+    blob_objs =
+      Workspace.list_files!(workspace_path)
+      |> Enum.map(fn file ->
+        obj =
+          Workspace.read_file(Path.join([workspace_path, file]))
+          |> Blob.new()
+          |> Database.store(db_path)
 
-      {file, Object.oid(obj)}
-    end)
-    |> Tree.new()
-    |> Database.store(db_path)
-    |> then(&IO.puts("tree: #{Object.oid(&1)}"))
+        {file, Object.oid(obj)}
+      end)
+
+    tree =
+      Tree.new(blob_objs)
+      |> Database.store(db_path)
+
+    author_name = System.get_env("RALPH_AUTHOR_NAME", "john doe")
+    author_email = System.get_env("RALPH_AUTHOR_EMAIL", "jd@unknown.com")
+
+    author =
+      "#{author_name} <#{author_email}> #{DateTime.utc_now() |> Calendar.strftime("%s %z")}"
+
+    commit =
+      Commit.new(Object.oid(tree), author, msg)
+      |> Database.store(db_path)
+
+    :ok = Database.write_head(commit, ralph_path)
+
+    IO.puts("[(root-commit) #{Object.oid(commit)}] #{msg}")
+    System.halt(0)
   end
 end

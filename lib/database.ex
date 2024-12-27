@@ -4,6 +4,7 @@ defmodule Database do
   serialize data into git db format
   compress it and store it.
   """
+  alias Objects.Commit
 
   @doc """
   serialize ex
@@ -58,6 +59,13 @@ defmodule Database do
     t = Enum.reduce(0..6, [], fn _d, li -> [Enum.random(97..122) | li] end) |> to_string
     timestamp = DateTime.utc_now() |> DateTime.to_unix()
     "temp_obj_#{t}_#{timestamp}"
+  end
+
+  @spec write_head(Commit.t(), String.t()) :: :ok | any()
+  def write_head(%Commit{} = commit, ralph_path) do
+    file = File.open!(Path.join([ralph_path, "HEAD"]), [:write])
+    IO.write(file, commit.oid)
+    File.close(file)
   end
 
   @spec compress(binary()) :: binary()

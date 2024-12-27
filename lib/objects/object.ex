@@ -5,7 +5,4 @@ defprotocol Object do
 
   @spec type(t()) :: object_type()
   def type(object)
-
-  @spec data(t()) :: binary()
-  def data(object)
 end

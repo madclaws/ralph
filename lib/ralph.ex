@@ -15,8 +15,8 @@ defmodule Ralph do
           {OptionParser.parsed(), OptionParser.argv(), OptionParser.errors()}
   defp parse_options(args) do
     OptionParser.parse(args,
-      strict: []
-      # aliases: [i: :init]
+      strict: [message: :string],
+      aliases: [m: :message]
     )
   end
 
@@ -27,8 +27,8 @@ defmodule Ralph do
       {_, ["init", path], _} ->
         Commands.init(path)
 
-      {_, ["commit"], _} ->
-        Commands.commit()
+      {[message: msg], ["commit"], _} ->
+        Commands.commit(msg)
 
       _ ->
         display_help()

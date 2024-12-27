@@ -20,10 +20,6 @@ defmodule Objects.Blob do
     def type(object) do
       object.type
     end
-
-    def data(object) do
-      object.data
-    end
   end
 
   defimpl String.Chars do

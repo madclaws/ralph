@@ -11,7 +11,6 @@ defmodule Objects.Tree do
   @type t :: %__MODULE__{
           type: Object.object_type(),
           oid: String.t() | nil,
-          data: String.t() | nil,
           children: children(),
           mode: number()
         }
@@ -30,10 +29,6 @@ defmodule Objects.Tree do
 
     def type(object) do
       object.type
-    end
-
-    def data(object) do
-      object.data
     end
   end
 
