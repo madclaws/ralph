@@ -58,18 +58,20 @@ defmodule Commands do
         stat = Workspace.stat_file(Path.join([workspace_path, file]))
 
         # converting stat to a base octal integer
-        obj =
-          Blob.new(data, Integer.to_string(stat.mode, 8) |> String.to_integer())
-          |> Database.store(db_path)
-
-        {file, obj}
+        Blob.new(data, file, Integer.to_string(stat.mode, 8) |> String.to_integer())
+        |> Database.store(db_path)
       end)
-      |> IO.inspect()
+
+    # A bootiful closure ..
+    # This makes db_path accessible even inside the Tree.traverse fn which is in
+    # Tree module without even explicitly passing in lamda.
+    db_fn = fn object -> Database.store(object, db_path) end
 
     tree =
-      Tree.new(blob_objs)
-      |> Database.store(db_path)
+      Tree.build(blob_objs)
+      |> Tree.traverse(db_fn)
 
+    tree = Database.store(tree, db_path)
     author_name = System.get_env("RALPH_AUTHOR_NAME", "john doe")
     author_email = System.get_env("RALPH_AUTHOR_EMAIL", "jd@unknown.com")
     parent = Refs.read_head(ralph_path)

@@ -14,43 +14,56 @@ defmodule Objects.Tree do
   @type t :: %__MODULE__{
           type: Object.object_type(),
           oid: String.t() | nil,
-          children: children(),
-          entries: map()
+          entries: %{String.t() => Object},
+          mode: integer()
         }
-  defstruct [:oid, :children, entries: %{}, type: :tree]
-
-  @spec new(children()) :: __MODULE__.t()
-  def new(children) do
-    %__MODULE__{}
-    |> Map.merge(%{children: children})
-  end
+  defstruct [:oid, entries: %{}, type: :tree, mode: 40000]
 
   def new do
     %__MODULE__{}
   end
 
-  @spec build(children()) :: __MODULE__.t()
+  @spec build(list(Blob.t())) :: __MODULE__.t()
   def build(children) do
-    sorted_children = Enum.sort(children, &(elem(&1, 0) <= elem(&2, 0)))
+    sorted_children = Enum.sort(children, &(&1.name <= &2.name))
     root = new()
 
     sorted_children
-    |> Enum.reduce(root, fn {name, _blob} = child, root ->
-      add_entry(root, Workspace.descend(name) |> Enum.drop(-1), child)
+    |> Enum.reduce(root, fn child_blob, root ->
+      add_entry(root, Workspace.descend(child_blob.name) |> Enum.drop(-1), child_blob)
     end)
-    |> IO.inspect()
   end
 
-  @spec add_entry(__MODULE__.t(), list(), child()) :: __MODULE__.t()
-  defp add_entry(tree, parent_dirs, {name, _blob} = child) do
+  @spec traverse(__MODULE__.t(), action :: function()) :: any()
+  def traverse(tree, action) do
+    Enum.reduce(tree.entries, tree, fn {name, entry}, parent_tree ->
+      entry =
+        if is_struct(entry, __MODULE__) do
+          traverse(entry, action)
+        else
+          entry
+        end
+
+      if is_struct(entry, __MODULE__) do
+        entry = action.(entry)
+        sub_entries = Map.put(parent_tree.entries, name, entry)
+        Map.put(parent_tree, :entries, sub_entries)
+      else
+        parent_tree
+      end
+    end)
+  end
+
+  @spec add_entry(__MODULE__.t(), list(), Blob.t()) :: __MODULE__.t()
+  defp add_entry(tree, parent_dirs, child_blob) do
     if Enum.empty?(parent_dirs) do
-      entries = Map.put(tree.entries, Path.basename(name), child)
+      entries = Map.put(tree.entries, Path.basename(child_blob.name), child_blob)
       %{tree | entries: entries}
     else
       [p | rest] = parent_dirs
       p = Path.basename(p)
       sub_tree = tree.entries[p] || new()
-      sub_tree = add_entry(sub_tree, rest, child)
+      sub_tree = add_entry(sub_tree, rest, child_blob)
       entries = Map.put(tree.entries, p, sub_tree)
       %{tree | entries: entries}
     end
@@ -64,14 +77,17 @@ defmodule Objects.Tree do
     def type(object) do
       object.type
     end
+
+    def mode(object) do
+      object.mode
+    end
   end
 
   defimpl String.Chars do
     def to_string(object) do
-      Enum.sort(object.children, &(elem(&1, 0) <= elem(&2, 0)))
-      |> Enum.map(fn {name, blob} ->
+      Enum.map(object.entries, fn {name, object} ->
         # Base.decode16! converts the 40byte oid to 20byte
-        "#{blob.mode} #{name}\0" <> Base.decode16!(blob.oid, case: :lower)
+        "#{Object.mode(object)} #{name}\0" <> Base.decode16!(Object.oid(object), case: :lower)
       end)
       |> Enum.join("")
     end

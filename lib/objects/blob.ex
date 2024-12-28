@@ -3,14 +3,15 @@ defmodule Objects.Blob do
           type: Object.object_type(),
           oid: String.t(),
           data: String.t(),
-          mode: integer()
+          mode: integer(),
+          name: String.t()
         }
-  defstruct [:oid, :data, :mode, type: :blob]
+  defstruct [:oid, :data, :mode, :name, type: :blob]
 
-  @spec new(binary()) :: __MODULE__.t()
-  def new(data, mode \\ 100644) do
+  @spec new(binary(), String.t()) :: __MODULE__.t()
+  def new(data, name, mode \\ 100_644) do
     %__MODULE__{}
-    |> Map.merge(%{data: data, mode: mode})
+    |> Map.merge(%{data: data, mode: mode, name: name})
   end
 
   defimpl Object do
@@ -20,6 +21,10 @@ defmodule Objects.Blob do
 
     def type(object) do
       object.type
+    end
+
+    def mode(object) do
+      object.mode
     end
   end
 

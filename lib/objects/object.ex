@@ -5,4 +5,7 @@ defprotocol Object do
 
   @spec type(t()) :: object_type()
   def type(object)
+
+  @spec mode(t()) :: integer()
+  def mode(object)
 end

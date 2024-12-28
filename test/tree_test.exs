@@ -6,13 +6,17 @@ defmodule TreeTest do
   @tag :build
   test "build/1" do
     children = [
-      # {"author.ex", Blob.new("author")},
+      Blob.new("author", "author.ex"),
       # {"lib.ex", Blob.new("lib")},
-      {"bin/ralph.ex", Blob.new("ralph")},
-      {"bin/zest.ex", Blob.new("zest")},
-      {"bin/b/arc.ex", Blob.new("arc")},
+      Blob.new("ralph", "bin/ralph.ex")
+      # {"bin/zest.ex", Blob.new("zest")},
+      # {"bin/b/arc.ex", Blob.new("arc")},
     ]
 
-    Tree.build(children)
+    tree = Tree.build(children) |> IO.inspect()
+    IO.puts("\n\n\n")
+    db_path = "/alo"
+    db_fn = fn _object -> (db_path <> "#{Enum.random(0..10)}") |> IO.inspect() end
+    Tree.traverse(tree, db_fn) |> IO.inspect(label: :traversed_tree)
   end
 end

@@ -23,6 +23,11 @@ defmodule Objects.Commit do
     def type(object) do
       object.type
     end
+
+    # commit doesnt need mode, just a dummy impl
+    def mode(_object) do
+      0
+    end
   end
 
   defimpl String.Chars do
