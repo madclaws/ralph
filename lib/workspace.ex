@@ -16,7 +16,7 @@ defmodule Workspace do
 
   @spec stat_file(Path.t()) :: map()
   def stat_file(pathname) do
-    File.stat!(pathname)
+    File.stat!(pathname, time: :posix)
   end
 
   @spec descend(Path.t(), list()) :: list(Path.t())

@@ -1,5 +1,5 @@
 defprotocol Object do
-  @type object_type :: :blob | :tree
+  @type object_type :: :blob | :tree | :commit | :index
   @spec oid(t()) :: String.t()
   def oid(object)
 
