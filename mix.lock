@@ -1,0 +1,4 @@
+%{
+  "aja": {:hex, :aja, "0.7.4", "5f14885df9fdd71e17cfc5f51ec42fe4b8328b23dd7ac34aa4acae6b77843819", [:mix], [{:jason, "~> 1.2", [hex: :jason, repo: "hexpm", optional: true]}], "hexpm", "e7d295357288558f808431f8cc3ce313b3b5d02b20a446433da48490440c7286"},
+  "ordered_map": {:hex, :ordered_map, "0.0.8", "062e53fec2ec88dabc787a29e094cd3e2235de14ed86fd496174186183f8d727", [:mix], [], "hexpm", "4972c5da32c81ee3ec5f20966220ec5a8422ec18a57228caa36c4e0becdf9d65"},
+}

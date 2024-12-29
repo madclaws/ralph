@@ -20,6 +20,13 @@ defmodule Refs do
     end
   end
 
+  @spec update_index(binary(), Path.t()) :: :ok | any()
+  def update_index(entry, ralph_path) do
+    file = File.open!(ralph_path, [:write])
+    IO.binwrite(file, entry)
+    File.close(file)
+  end
+
   @spec get_head_path(Path.t()) :: Path.t()
   defp get_head_path(ralph_path) do
     Path.join([ralph_path, "HEAD"])

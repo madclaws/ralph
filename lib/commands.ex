@@ -2,6 +2,7 @@ defmodule Commands do
   @moduledoc """
   Functions for CLI commands
   """
+  alias Objects.Index
   alias Objects.Commit
   alias Objects.Tree
   alias Objects.Blob
@@ -90,6 +91,25 @@ defmodule Commands do
     else
       IO.puts("[#{Object.oid(commit)}] #{msg}")
     end
+
+    System.halt(0)
+  end
+
+  def add(file_path) do
+    workspace_path = Path.expand(".")
+    ralph_path = Path.join([workspace_path, ".git"])
+    db_path = Path.join([ralph_path, "objects"])
+    index = Index.new(Path.join([ralph_path, "index"]))
+    data = Workspace.read_file(Path.join([workspace_path, file_path]))
+
+    stat = Workspace.stat_file(Path.join([workspace_path, file_path]))
+
+    blob =
+      Blob.new(data, file_path)
+      |> Database.store(db_path)
+
+    Index.add(index, file_path, Object.oid(blob), stat)
+    |> Index.write_updates()
 
     System.halt(0)
   end
