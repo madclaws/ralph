@@ -5,8 +5,12 @@ defmodule Workspace do
 
   @spec list_files!(Path.t(), Path.t()) :: list()
   def list_files!(pathname, workspace_path) do
-    do_list_files!(pathname, workspace_path)
-    |> List.flatten()
+    if File.dir?(pathname) do
+      do_list_files!(pathname, workspace_path)
+      |> List.flatten()
+    else
+      [Path.relative_to(pathname, workspace_path)]
+    end
   end
 
   @spec read_file(Path.t()) :: binary()
