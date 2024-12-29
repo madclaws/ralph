@@ -30,8 +30,8 @@ defmodule Ralph do
       {[message: msg], ["commit"], _} ->
         Commands.commit(msg)
 
-      {[], ["add", path], []} ->
-        Commands.add(path)
+      {[], ["add" | paths], []} ->
+        Commands.add(paths)
 
       _ ->
         display_help()

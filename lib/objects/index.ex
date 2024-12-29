@@ -7,23 +7,27 @@ defmodule Objects.Index do
           entries: %{String.t() => Object},
           mode: integer(),
           # index's path, .git/INDEX
-          path: Path.t()
+          path: Path.t(),
+          key_set: list()
         }
-  defstruct [:oid, :mode, :path, entries: %{}, type: :index]
+  defstruct [:oid, :mode, :path, :key_set, entries: %{}, type: :index]
 
   @max_path_size 0xFFF
 
   @spec new(Path.t()) :: __MODULE__.t()
   def new(path) do
     %__MODULE__{}
-    |> Map.merge(%{path: path})
+    |> Map.merge(%{path: path, key_set: :ordsets.new()})
   end
 
   @spec add(__MODULE__.t(), Path.t(), binary(), File.Stat.t()) :: __MODULE__.t()
   def add(index, pathname, oid, stat) do
-    entry = create_entry(pathname, oid, stat) |> IO.inspect()
+    # We are using ordset so that we can make sure we are writing to
+    # index in the filename order
+    key_set = :ordsets.add_element(pathname, index.key_set)
+    entry = create_entry(pathname, oid, stat)
     entries = Map.put(index.entries, pathname, entry)
-    %{index | entries: entries}
+    %{index | entries: entries, key_set: key_set}
   end
 
   @spec write_updates(__MODULE__.t()) :: __MODULE__.t()
@@ -35,8 +39,8 @@ defmodule Objects.Index do
     header = <<"DIRC"::binary, 2::32, Enum.count(index.entries)::32>>
 
     entry_bin =
-      Enum.reduce(index.entries, <<>>, fn {_k, v}, bin ->
-        bin <> serialize_entry(v)
+      Enum.reduce(index.key_set, <<>>, fn k, bin ->
+        bin <> serialize_entry(index.entries[k])
       end)
 
     index_hash = :crypto.hash(:sha, header <> entry_bin)
@@ -69,7 +73,6 @@ defmodule Objects.Index do
   defp serialize_entry(entry) do
     {_, entry_bin} =
       Enum.reduce_while(entry, {0, <<>>}, fn {_k, v}, acc_state ->
-        IO.inspect(v)
         {acc, bin_stat} = acc_state
 
         if acc + 1 == 10 do
@@ -79,14 +82,14 @@ defmodule Objects.Index do
         end
       end)
 
-    IO.inspect(byte_size(entry[:oid]), label: :oid_size)
-
     entry_bin =
       entry_bin <>
         (entry[:oid] |> Base.decode16!(case: :lower)) <> <<entry[:flags]::16>> <> entry[:path]
 
     repeated_null_bytes =
-      if rem(byte_size(entry_bin), 8) == 0, do: 8, else: 8 - rem(byte_size(entry_bin), 8)
+      if rem(byte_size(entry_bin), 8) == 0,
+        do: 8,
+        else: (8 - rem(byte_size(entry_bin), 8)) |> IO.inspect(label: :repeat_null_bytes)
 
     entry_bin <> String.duplicate("\0", repeated_null_bytes)
   end
