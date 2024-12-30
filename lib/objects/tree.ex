@@ -25,10 +25,9 @@ defmodule Objects.Tree do
 
   @spec build(list(Blob.t())) :: __MODULE__.t()
   def build(children) do
-    sorted_children = Enum.sort(children, &(&1.name <= &2.name))
     root = new()
 
-    sorted_children
+    children
     |> Enum.reduce(root, fn child_blob, root ->
       add_entry(root, Workspace.descend(child_blob.name) |> Enum.drop(-1), child_blob)
     end)

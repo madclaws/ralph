@@ -13,10 +13,10 @@ defmodule TreeTest do
       # {"bin/b/arc.ex", Blob.new("arc")},
     ]
 
-    tree = Tree.build(children) |> IO.inspect()
+    tree = Tree.build(children)
     IO.puts("\n\n\n")
     db_path = "/alo"
-    db_fn = fn _object -> (db_path <> "#{Enum.random(0..10)}") |> IO.inspect() end
-    Tree.traverse(tree, db_fn) |> IO.inspect(label: :traversed_tree)
+    db_fn = fn _object -> db_path <> "#{Enum.random(0..10)}" end
+    Tree.traverse(tree, db_fn)
   end
 end

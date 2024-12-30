@@ -35,6 +35,7 @@ defmodule Ralph do
 
       {[], ["load"], []} ->
         Commands.load()
+
       _ ->
         display_help()
     end

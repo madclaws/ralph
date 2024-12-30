@@ -9,9 +9,9 @@ defmodule Objects.Blob do
   defstruct [:oid, :data, :mode, :name, type: :blob]
 
   @spec new(binary(), String.t()) :: __MODULE__.t()
-  def new(data, name, mode \\ 100_644) do
+  def new(data, name, mode \\ 100_644, oid \\ nil) do
     %__MODULE__{}
-    |> Map.merge(%{data: data, mode: mode, name: name})
+    |> Map.merge(%{data: data, mode: mode, name: name, oid: oid})
   end
 
   defimpl Object do

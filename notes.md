@@ -12,7 +12,6 @@
 
 - We are not verifying checksum while loading the index to memory. Can do this later.
 
-- if different files have same content then only one blob is made since hash is made of content, i think this should be fixed.
 ## Tips and tricks
 
 - To access values from an unordered map, one can use another orderedset to store the keys of the map in order, and later access the map value by iterating through the set values as keys.

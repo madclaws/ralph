@@ -58,7 +58,7 @@ defmodule Objects.Index do
 
     try do
       file = open_index_file(index)
-      entry_count = read_header(file) |> IO.inspect(label: :count)
+      entry_count = read_header(file)
       index = read_entries(index, file, entry_count)
       File.close(file)
       index

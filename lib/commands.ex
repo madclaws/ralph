@@ -51,16 +51,14 @@ defmodule Commands do
     ralph_path = Path.join([workspace_path, ".git"])
     db_path = Path.join([ralph_path, "objects"])
 
+    index =
+      Index.new(Path.join([ralph_path, "index"]))
+      |> Index.load()
+
+    # Dummy blobs for tree building, maybe w'll change later
     blob_objs =
-      Workspace.list_files!(workspace_path, workspace_path)
-      |> Enum.map(fn file ->
-        data = Workspace.read_file(Path.join([workspace_path, file]))
-
-        stat = Workspace.stat_file(Path.join([workspace_path, file]))
-
-        # converting stat to a base octal integer
-        Blob.new(data, file, Integer.to_string(stat.mode, 8) |> String.to_integer())
-        |> Database.store(db_path)
+      Enum.map(index.entries, fn {k, v} ->
+        Blob.new("", k, Integer.to_string(v[:mode], 8) |> String.to_integer(), v[:oid])
       end)
 
     # A bootiful closure ..
