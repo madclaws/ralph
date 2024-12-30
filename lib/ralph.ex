@@ -33,6 +33,8 @@ defmodule Ralph do
       {[], ["add" | paths], []} ->
         Commands.add(paths)
 
+      {[], ["load"], []} ->
+        Commands.load()
       _ ->
         display_help()
     end

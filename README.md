@@ -1,6 +1,6 @@
 # Ralph
 
-**A teeny-tiny decentralized version control**
+**A teeny-tiny git compatible decentralized version control**
 
 ## Trying out
 

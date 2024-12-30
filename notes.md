@@ -10,10 +10,12 @@
 
 - We are not calculating SHA1 for a stream of data while writing to index, we're just calculating SHA for entire content at once.
 
-- We are skipping the incremental addition to index, since it will take sometime to unpack the index and load it to memory. Due to this its better to use `ralph add .` everytime.
-since we will be overwriting the index with fresh data everytime. Should comeback to this later.
+- We are not verifying checksum while loading the index to memory. Can do this later.
 
+- if different files have same content then only one blob is made since hash is made of content, i think this should be fixed.
 ## Tips and tricks
 
 - To access values from an unordered map, one can use another orderedset to store the keys of the map in order, and later access the map value by iterating through the set values as keys.
 Or just use a library which does this ;)
+
+- The binary read/write in ralph is using binary mode rather than text mode using `IO.binread`/ `IO.binwrite`

@@ -100,7 +100,10 @@ defmodule Commands do
     workspace_path = Path.expand(".")
     ralph_path = Path.join([workspace_path, ".git"])
     db_path = Path.join([ralph_path, "objects"])
-    index = Index.new(Path.join([ralph_path, "index"]))
+
+    index =
+      Index.new(Path.join([ralph_path, "index"]))
+      |> Index.load()
 
     Enum.reduce(file_paths, index, fn file_path, index ->
       abs_path = Path.expand(file_path)
@@ -121,5 +124,12 @@ defmodule Commands do
     |> Index.write_updates()
 
     System.halt(0)
+  end
+
+  @spec load() :: any()
+  def load() do
+    workspace_path = Path.expand(".")
+    index = Index.new(Path.join([workspace_path, ".git/index"]))
+    Index.load(index)
   end
 end
