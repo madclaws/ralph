@@ -10,9 +10,19 @@ defmodule Objects.Index do
           path: Path.t(),
           key_set: list(),
           # Changes after index loaded to memory
-          changed: boolean()
+          changed: boolean(),
+          parents: map()
         }
-  defstruct [:oid, :mode, :path, :key_set, entries: %{}, type: :index, changed: false]
+  defstruct [
+    :oid,
+    :mode,
+    :path,
+    :key_set,
+    entries: %{},
+    type: :index,
+    changed: false,
+    parents: %{}
+  ]
 
   @max_path_size 0xFFF
 
@@ -26,10 +36,9 @@ defmodule Objects.Index do
   def add(index, pathname, oid, stat) do
     # We are using ordset so that we can make sure we are writing to
     # index in the filename order
-    key_set = :ordsets.add_element(pathname, index.key_set)
+    index = discard_conflicts(index, pathname)
     entry = create_entry(pathname, oid, stat)
-    entries = Map.put(index.entries, pathname, entry)
-    %{index | entries: entries, key_set: key_set, changed: true}
+    store_entry(index, pathname, entry)
   end
 
   @spec write_updates(__MODULE__.t()) :: __MODULE__.t()
@@ -95,9 +104,7 @@ defmodule Objects.Index do
 
       entry = read_until_null(file, entry, min_block)
       entry = deserialize_entry(entry)
-      key_set = :ordsets.add_element(entry[:path], index.key_set)
-      entries = Map.put(index.entries, entry[:path], entry)
-      %{index | entries: entries, key_set: key_set}
+      store_entry(index, entry[:path], entry)
     end)
   end
 
@@ -184,5 +191,79 @@ defmodule Objects.Index do
       flags: flags,
       path: path
     )
+  end
+
+  @spec discard_conflicts(__MODULE__.t(), Path.t()) :: any()
+  defp discard_conflicts(index, pathname) do
+    Workspace.descend(pathname)
+    |> Enum.drop(-1)
+    |> Enum.reduce(index, fn path, index ->
+      remove_entry(index, path)
+    end)
+    |> remove_children(pathname)
+  end
+
+  @spec store_entry(__MODULE__.t(), Path.t(), Aja.OrdMap.t()) :: __MODULE__.t()
+  defp store_entry(index, pathname, entry) do
+    key_set = :ordsets.add_element(pathname, index.key_set)
+    entries = Map.put(index.entries, pathname, entry)
+
+    parents =
+      Workspace.descend(pathname)
+      |> Enum.drop(-1)
+      |> Enum.reduce(index.parents, fn path, parents ->
+        if Map.has_key?(parents, path) do
+          entry_set = parents[path]
+          entry_set = :ordsets.add_element(pathname, entry_set)
+          Map.put(parents, path, entry_set)
+        else
+          :ordsets.new()
+          |> then(&:ordsets.add_element(pathname, &1))
+          |> then(&Map.put(parents, path, &1))
+        end
+      end)
+
+    %{index | entries: entries, key_set: key_set, changed: true, parents: parents}
+  end
+
+  @spec remove_entry(__MODULE__.t(), Path.t()) :: __MODULE__.t()
+  defp remove_entry(index, path) do
+    entry = index.entries[path]
+
+    if is_nil(entry) do
+      index
+    else
+      key_set = :ordsets.del_element(entry[:path], index.key_set)
+      entries = Map.delete(index.entries, entry[:path])
+
+      parents =
+        Workspace.descend(entry[:path])
+        |> Enum.drop(-1)
+        |> Enum.reduce(index.parents, fn parent_path, parents ->
+          entry_set = parents[parent_path]
+          entry_set = :ordsets.del_element(entry[:path], entry_set)
+
+          if :ordsets.is_empty(entry_set) do
+            Map.delete(parents, parent_path)
+          else
+            Map.put(parents, parent_path, entry_set)
+          end
+        end)
+
+      %{index | key_set: key_set, entries: entries, parents: parents}
+    end
+  end
+
+  @spec remove_children(__MODULE__.t(), Path.t()) :: __MODULE__.t()
+  defp remove_children(index, path) do
+    if Map.has_key?(index.parents, path) do
+      children = index.parents[path]
+
+      Enum.reduce(children, index, fn child, index ->
+        remove_entry(index, child)
+      end)
+    else
+      index
+    end
   end
 end
