@@ -103,21 +103,34 @@ defmodule Commands do
       Index.new(Path.join([ralph_path, "index"]))
       |> Index.load()
 
-    Enum.reduce(file_paths, index, fn file_path, index ->
-      abs_path = Path.expand(file_path)
+    paths =
+      try do
+        Enum.flat_map(file_paths, fn file_path ->
+          abs_path = Path.expand(file_path)
+          Workspace.list_files!(abs_path, workspace_path)
+        end)
+      rescue
+        err ->
+          Terminal.puts(
+            IO.ANSI.red(),
+            "Fatal #{inspect(err)} #{Emojis.emojis().snowman}",
+            :stderr
+          )
 
-      Workspace.list_files!(abs_path, workspace_path)
-      |> Enum.reduce(index, fn file_path, index ->
-        data = Workspace.read_file(Path.join([workspace_path, file_path]))
+          System.halt(1)
+      end
 
-        stat = Workspace.stat_file(Path.join([workspace_path, file_path]))
+    paths
+    |> Enum.reduce(index, fn file_path, index ->
+      data = Workspace.read_file(Path.join([workspace_path, file_path]))
 
-        blob =
-          Blob.new(data, file_path)
-          |> Database.store(db_path)
+      stat = Workspace.stat_file(Path.join([workspace_path, file_path]))
 
-        Index.add(index, file_path, Object.oid(blob), stat)
-      end)
+      blob =
+        Blob.new(data, file_path)
+        |> Database.store(db_path)
+
+      Index.add(index, file_path, Object.oid(blob), stat)
     end)
     |> Index.write_updates()
 

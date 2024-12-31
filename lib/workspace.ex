@@ -5,11 +5,18 @@ defmodule Workspace do
 
   @spec list_files!(Path.t(), Path.t()) :: list()
   def list_files!(pathname, workspace_path) do
-    if File.dir?(pathname) do
-      do_list_files!(pathname, workspace_path)
-      |> List.flatten()
-    else
-      [Path.relative_to(pathname, workspace_path)]
+    relative = Path.relative_to(pathname, workspace_path)
+
+    cond do
+      File.dir?(pathname) ->
+        do_list_files!(pathname, workspace_path)
+        |> List.flatten()
+
+      File.exists?(pathname) ->
+        [relative]
+
+      true ->
+        raise "MissingFile: pathspec '#{relative}' did not match any files"
     end
   end
 
