@@ -120,19 +120,38 @@ defmodule Commands do
           System.halt(1)
       end
 
-    paths
-    |> Enum.reduce(index, fn file_path, index ->
-      data = Workspace.read_file(Path.join([workspace_path, file_path]))
+    index =
+      try do
+        paths
+        |> Enum.reduce(index, fn file_path, index ->
+          data = Workspace.read_file(Path.join([workspace_path, file_path]))
 
-      stat = Workspace.stat_file(Path.join([workspace_path, file_path]))
+          stat = Workspace.stat_file(Path.join([workspace_path, file_path]))
 
-      blob =
-        Blob.new(data, file_path)
-        |> Database.store(db_path)
+          blob =
+            Blob.new(data, file_path)
+            |> Database.store(db_path)
 
-      Index.add(index, file_path, Object.oid(blob), stat)
-    end)
-    |> Index.write_updates()
+          Index.add(index, file_path, Object.oid(blob), stat)
+        end)
+      rescue
+        err ->
+          Terminal.puts(
+            IO.ANSI.red(),
+            "error: #{inspect(err)} #{Emojis.emojis().snowman}",
+            :stderr
+          )
+
+          Terminal.puts(
+            IO.ANSI.red(),
+            "fatal: adding files failed",
+            :stderr
+          )
+
+          System.halt(1)
+      end
+
+    Index.write_updates(index)
 
     System.halt(0)
   end

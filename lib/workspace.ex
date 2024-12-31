@@ -23,11 +23,17 @@ defmodule Workspace do
   @spec read_file(Path.t()) :: binary()
   def read_file(pathname) do
     File.read!(pathname)
+  rescue
+    _err ->
+      raise "No Permission: open #{pathname}, permission denied"
   end
 
   @spec stat_file(Path.t()) :: map()
   def stat_file(pathname) do
     File.stat!(pathname, time: :posix)
+  rescue
+    _err ->
+      raise "No Permission: stat #{pathname}, permission denied"
   end
 
   @spec descend(Path.t(), list()) :: list(Path.t())
