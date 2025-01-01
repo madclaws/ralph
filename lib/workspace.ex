@@ -20,6 +20,19 @@ defmodule Workspace do
     end
   end
 
+  @spec list_dir(Path.t(), Path.t()) :: %{String.t() => File.Stat.t()}
+  def list_dir(dirname, workspace) do
+    dir_abs_path = Path.join(workspace, dirname || "")
+
+    File.ls!(dir_abs_path)
+    |> Enum.filter(fn file -> file not in [".", "..", ".git"] end)
+    |> Enum.reduce(%{}, fn file, file_stat ->
+      relative = Path.relative_to(Path.join(dir_abs_path, file), workspace)
+      stat = File.stat!(Path.join(dir_abs_path, file))
+      Map.put(file_stat, relative, stat)
+    end)
+  end
+
   @spec read_file(Path.t()) :: binary()
   def read_file(pathname) do
     File.read!(pathname)

@@ -10,7 +10,7 @@ defmodule Commands do
   alias Utils.Terminal
 
   @spec init(String.t()) :: any()
-  def init(path) do
+  def init(path \\ ".") do
     abs_path = Path.expand(path)
     ralph_path = Path.join([abs_path, ".git"])
 
@@ -34,8 +34,6 @@ defmodule Commands do
       IO.ANSI.green(),
       "Initialized empty ralph repo at #{ralph_path} #{Emojis.emojis().clinking_glasses}"
     )
-
-    System.halt(0)
   end
 
   @doc """
@@ -89,13 +87,11 @@ defmodule Commands do
     else
       IO.puts("[#{Object.oid(commit)}] #{msg}")
     end
-
-    System.halt(0)
   end
 
   @spec add(list(Path.t())) :: any()
-  def add(file_paths) do
-    workspace_path = Path.expand(".")
+  def add(file_paths, wrk_path \\ ".") do
+    workspace_path = Path.expand(wrk_path)
     ralph_path = Path.join([workspace_path, ".git"])
     db_path = Path.join([ralph_path, "objects"])
 
@@ -152,8 +148,6 @@ defmodule Commands do
       end
 
     Index.write_updates(index)
-
-    System.halt(0)
   end
 
   @spec load() :: any()
@@ -161,5 +155,46 @@ defmodule Commands do
     workspace_path = Path.expand(".")
     index = Index.new(Path.join([workspace_path, ".git/index"]))
     Index.load(index)
+  end
+
+  @spec status() :: any()
+  def status(path \\ ".") do
+    workspace_path = Path.expand(path)
+    ralph_path = Path.join([workspace_path, ".git"])
+
+    index =
+      Index.new(Path.join([ralph_path, "index"]))
+      |> Index.load()
+
+    untracked = scan_workspace(index, nil, workspace_path, :ordsets.new())
+
+    untracked
+    |> Enum.sort()
+    |> Enum.each(fn path ->
+      IO.puts("?? #{path}")
+    end)
+  end
+
+  @spec scan_workspace(Index.t(), Path.t(), Path.t(), list()) :: list()
+  defp scan_workspace(index, dirname, workspace, untracked_list) do
+    Workspace.list_dir(dirname, workspace)
+    |> Enum.reduce(untracked_list, fn {file, stat}, untracked_list ->
+      if Index.tracked?(index, file) do
+        if stat.type == :directory do
+          scan_workspace(index, file, workspace, untracked_list)
+        else
+          untracked_list
+        end
+      else
+        if stat.type == :directory do
+          # doing this circus, so that we don't have to worry about path separator in other OS
+          # we get `file_path/` in unix and `file_path\` in windows ig.
+          [file, _] = Path.join(file, " ") |> String.split(" ")
+          :ordsets.add_element(file, untracked_list)
+        else
+          :ordsets.add_element(file, untracked_list)
+        end
+      end
+    end)
   end
 end

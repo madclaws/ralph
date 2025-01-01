@@ -10,5 +10,7 @@ defmodule Utils.Terminal do
     else
       IO.puts(IO.ANSI.format([color, log]))
     end
+
+    IO.ANSI.clear()
   end
 end

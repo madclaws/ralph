@@ -26,15 +26,22 @@ defmodule Ralph do
     case options do
       {_, ["init", path], _} ->
         Commands.init(path)
+        System.halt(0)
 
       {[message: msg], ["commit"], _} ->
         Commands.commit(msg)
+        System.halt(0)
 
       {[], ["add" | paths], []} ->
         Commands.add(paths)
+        System.halt(0)
 
       {[], ["load"], []} ->
         Commands.load()
+
+      {[], ["status"], []} ->
+        Commands.status()
+        System.halt(0)
 
       _ ->
         display_help()

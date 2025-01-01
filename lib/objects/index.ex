@@ -77,6 +77,11 @@ defmodule Objects.Index do
     end
   end
 
+  @spec tracked?(__MODULE__.t(), Path.t()) :: boolean()
+  def tracked?(index, path) do
+    Map.has_key?(index.entries, path) or Map.has_key?(index.parents, path)
+  end
+
   @spec clear(__MODULE__.t()) :: __MODULE__.t()
   defp clear(index) do
     %{index | entries: %{}, key_set: :ordsets.new(), changed: false}
