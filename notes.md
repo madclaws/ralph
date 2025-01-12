@@ -12,6 +12,9 @@
 
 - We are not verifying checksum while loading the index to memory. Can do this later.
 
+- 9.1.3. Empty untracked directories - This is not handled as of now.
+
+
 ## Tips and tricks
 
 - To access values from an unordered map, one can use another orderedset to store the keys of the map in order, and later access the map value by iterating through the set values as keys.

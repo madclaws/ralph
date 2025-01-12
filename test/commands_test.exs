@@ -46,4 +46,21 @@ defmodule CommandsTest do
     assert ExUnit.CaptureIO.capture_io(fn -> Commands.status(meta.test_path) end) ==
              "?? a/b/c/\n?? a/outer.txt\n"
   end
+
+  @tag :skip
+  test "doesn't list empty untracked directories", meta do
+    File.mkdir_p!(Path.join([meta.test_path, "outer"]))
+
+    assert ExUnit.CaptureIO.capture_io(fn -> Commands.status(meta.test_path) end) ==
+             ""
+  end
+
+  @tag :skip
+  test "lists untracked directories that indirectly contain files", meta do
+    File.mkdir_p!(Path.join([meta.test_path, "outer/inner"]))
+    File.touch(Path.join([meta.test_path, "outer/inner/file.txt"]))
+
+    assert ExUnit.CaptureIO.capture_io(fn -> Commands.status(meta.test_path) end) ==
+             "?? outer/\n"
+  end
 end
