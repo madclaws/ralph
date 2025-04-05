@@ -16,3 +16,5 @@
 - `ralph init <folder_name>`
 - `ralph add <dir>`
 - `ralph commit -m <msg>`
+
+NOTE: Since ralph follows git's protocols, git commands can also be used.
