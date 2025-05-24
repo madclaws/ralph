@@ -6,10 +6,8 @@ defmodule Database do
   """
 
   @doc """
-  serialize ex
-  blob 6content
-  compress
-  write to correct folder
+  Creates the hash of the Object.t(), writes the Object to disk and return
+  the Object.t() with oid (hash) in its struct
   """
   @spec store(Object.t(), String.t()) :: Object.t()
   def store(object, db_path) do

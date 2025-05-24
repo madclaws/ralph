@@ -71,7 +71,7 @@ defmodule Workspace do
     end
   end
 
-  @spec list_files!(Path.t(), Path.t()) :: list()
+  @spec do_list_files!(Path.t(), Path.t()) :: list()
   defp do_list_files!(pathname, workspace_path) do
     files =
       File.ls!(pathname)

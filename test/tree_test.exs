@@ -8,7 +8,7 @@ defmodule TreeTest do
   @tag :build
   test "build/1" do
     children = [
-      Blob.new("author", "lib/author.ex"),
+      Blob.new("author", "lib/author.ex")
       # {"lib.ex", Blob.new("lib")},
       # Blob.new("ralph", "bin/ralph.ex")
       # {"bin/zest.ex", Blob.new("zest")},

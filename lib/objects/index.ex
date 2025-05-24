@@ -1,5 +1,7 @@
 defmodule Objects.Index do
-  @moduledoc false
+  @moduledoc """
+  
+  """
 
   @type t :: %__MODULE__{
           type: Object.object_type(),
@@ -26,6 +28,9 @@ defmodule Objects.Index do
 
   @max_path_size 0xFFF
 
+  @doc """
+  Creates a new empty Index with the given Path
+  """
   @spec new(Path.t()) :: __MODULE__.t()
   def new(path) do
     %__MODULE__{}

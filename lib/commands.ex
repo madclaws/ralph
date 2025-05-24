@@ -9,6 +9,13 @@ defmodule Commands do
   alias Utils.Emojis
   alias Utils.Terminal
 
+  @doc """
+  Inititialized a ralph repository
+
+  Can use `ralph init <path>` from CLI
+
+  Creates a .git folder and child folders like Objects and refs
+  """
   @spec init(String.t()) :: any()
   def init(path \\ ".") do
     abs_path = Path.expand(path)
@@ -38,9 +45,6 @@ defmodule Commands do
 
   @doc """
   Commits the uncommited files
-
-  get cur directory
-  list the files init.
   """
   @spec commit(String.t()) :: any()
   def commit(msg) do
@@ -56,12 +60,15 @@ defmodule Commands do
     # Dummy blobs for tree building, maybe w'll change later
     blob_objs =
       Enum.map(index.entries, fn {k, v} ->
+        # Data is empty here since we already wrote the Blob to disk in `ralph add`
+        # But how do u create correct hashes then - For creating hash of trees we only
+        # need hash of Blob, which we have from Index.
         Blob.new("", k, Integer.to_string(v[:mode], 8) |> String.to_integer(), v[:oid])
       end)
 
     # A bootiful closure ..
     # This makes db_path accessible even inside the Tree.traverse fn which is in
-    # Tree module without even explicitly passing in lamda.
+    # Tree module without even explicitly passing in Tree.traverse() at ln:no 75.
     db_fn = fn object -> Database.store(object, db_path) end
 
     tree =
@@ -89,10 +96,17 @@ defmodule Commands do
     end
   end
 
+  @doc """
+  Creates the compressed files in the disk and adds into the Index file
+
+  Can use `ralph add <path>` from CLI   
+  """
   @spec add(list(Path.t())) :: any()
   def add(file_paths, wrk_path \\ ".") do
     workspace_path = Path.expand(wrk_path)
     ralph_path = Path.join([workspace_path, ".git"])
+    # db_path is basically .git/objects where all the compressed blobs are stored
+    # by their hashes
     db_path = Path.join([ralph_path, "objects"])
 
     index =

@@ -38,7 +38,16 @@ defmodule Objects.Tree do
     end)
   end
 
-  @spec traverse(__MODULE__.t(), action :: function()) :: any()
+  @doc """
+  Traverse the tree created by `Tree.build()` and creates hashes for the respective
+  internal tree. This is how we create merkle tree.
+
+  So we go through each entry of the tree, for each entry
+  if the entry is a Tree itself we again call same function `traverse`
+  For a Tree, after iterating through its leaf nodes/Blobs we create the oid for
+  the tree and update the tree in its Parent's `entries`
+  """
+  @spec traverse(__MODULE__.t(), action :: function()) :: __MODULE__.t()
   def traverse(tree, action) do
     Enum.reduce(tree.entries, tree, fn {name, entry}, parent_tree ->
       entry =
@@ -49,6 +58,7 @@ defmodule Objects.Tree do
         end
 
       if is_struct(entry, __MODULE__) do
+        # What we do here is basically create the oid (hash) for the tree and write that to disk
         entry = action.(entry)
         sub_entries = Map.put(parent_tree.entries, name, entry)
         Map.put(parent_tree, :entries, sub_entries)
@@ -58,6 +68,8 @@ defmodule Objects.Tree do
     end)
   end
 
+  
+  # Recursively adds Blobs to the tree
   @spec add_entry(__MODULE__.t(), list(), Blob.t()) :: __MODULE__.t()
   defp add_entry(tree, parent_dirs, child_blob) do
     if Enum.empty?(parent_dirs) do
