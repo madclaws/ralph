@@ -9,7 +9,10 @@ defmodule Ralph.MixProject do
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() != :test,
       escript: [main_module: Ralph],
-      deps: deps()
+      deps: deps(),
+      preferred_cli_env: [
+        "test.watch": :test
+      ]
     ]
   end
 
@@ -23,7 +26,8 @@ defmodule Ralph.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:aja, "~> 0.7.4"}
+      {:aja, "~> 0.7.4"},
+      {:mix_test_watch, "~> 1.2", only: [:test]}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

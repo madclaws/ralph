@@ -23,6 +23,11 @@ defmodule Objects.Tree do
     %__MODULE__{}
   end
 
+  @doc """
+  Builds a hierarchial tree in the entries key
+
+  This tree will be later traversed for building the merkle tree or snapshot of the commit 
+  """
   @spec build(list(Blob.t())) :: __MODULE__.t()
   def build(children) do
     root = new()

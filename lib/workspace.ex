@@ -49,6 +49,13 @@ defmodule Workspace do
       raise "No Permission: stat #{pathname}, permission denied"
   end
 
+  @doc """
+  Returns a list of paths from each hierarchy as we descend from root of the pathname to the full pathname
+
+  ## Examples
+    iex> Workspace.descend("bin/lib/author.ex")
+    ["bin", "bin/lib", "bin/lib/author.ex"]
+  """
   @spec descend(Path.t(), list()) :: list(Path.t())
   def descend(pathname, paths \\ []) do
     case Path.split(pathname) do

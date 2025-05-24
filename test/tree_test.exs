@@ -3,12 +3,14 @@ defmodule TreeTest do
   alias Objects.Blob
   use ExUnit.Case
 
+  doctest Workspace
+
   @tag :build
   test "build/1" do
     children = [
-      Blob.new("author", "author.ex"),
+      Blob.new("author", "lib/author.ex"),
       # {"lib.ex", Blob.new("lib")},
-      Blob.new("ralph", "bin/ralph.ex")
+      # Blob.new("ralph", "bin/ralph.ex")
       # {"bin/zest.ex", Blob.new("zest")},
       # {"bin/b/arc.ex", Blob.new("arc")},
     ]
