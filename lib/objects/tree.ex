@@ -68,7 +68,56 @@ defmodule Objects.Tree do
     end)
   end
 
-  
+  # def traverse_proof(_, _, result) when not is_nil(result), do: result
+  def traverse_proof(tree, search_oid, prf_list) do
+    # |> IO.inspect(label: :traverse_res)
+    {search_oid, prf_list} =
+      res = do_traverse_proof(tree, search_oid, prf_list)
+
+    if Enum.empty?(prf_list) do
+      child =
+        Enum.find(tree.entries, fn {_, entry} ->
+          entry.oid == search_oid
+        end)
+
+      if not is_nil(child) do
+        siblings =
+          Enum.filter(tree.entries, fn {_, entry} -> entry.oid != search_oid end)
+          |> Enum.map(&elem(&1, 1).oid)
+
+        {tree.oid, prf_list ++ siblings}
+      else
+        res
+      end
+    else
+      res
+    end
+  end
+
+  defp do_traverse_proof(tree, search_oid, prf_list) do
+    Enum.reduce(tree.entries, {search_oid, prf_list}, fn {_name, entry}, {search_oid, prf_list} ->
+      if is_struct(entry, __MODULE__) do
+        # find the siblings and add it to the prf_list
+        Enum.find(entry.entries, fn {_, entry} ->
+          entry.oid == search_oid
+        end)
+        |> case do
+          nil ->
+            do_traverse_proof(entry, search_oid, prf_list ++ [entry.oid])
+
+          child ->
+            siblings =
+              Enum.filter(entry.entries, fn {_, entry} -> entry.oid != search_oid end)
+              |> Enum.map(&elem(&1, 1).oid)
+
+            {entry.oid, prf_list ++ siblings}
+        end
+      else
+        {search_oid, prf_list}
+      end
+    end)
+  end
+
   # Recursively adds Blobs to the tree
   @spec add_entry(__MODULE__.t(), list(), Blob.t()) :: __MODULE__.t()
   defp add_entry(tree, parent_dirs, child_blob) do

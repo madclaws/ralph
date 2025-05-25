@@ -8,14 +8,22 @@ defmodule Database do
   @doc """
   Creates the hash of the Object.t(), writes the Object to disk and return
   the Object.t() with oid (hash) in its struct
+
+  object - Object.t(),
+  db_path - The path where we store objects folder, normally .git/objects
+  write? - Should we actually write the data to disk (true by default, for tests we need to be false)
   """
-  @spec store(Object.t(), String.t()) :: Object.t()
-  def store(object, db_path) do
+  @spec store(Object.t(), String.t(), write? :: boolean()) :: Object.t()
+  def store(object, db_path, write? \\ true) do
     content =
       "#{Object.type(object)} #{byte_size(to_string(object))}\0#{to_string(object)}"
 
     oid = :crypto.hash(:sha, content) |> Base.encode16(case: :lower)
-    write_object(oid, content, db_path)
+
+    if write? do
+      write_object(oid, content, db_path)
+    end
+
     %{object | oid: oid}
   end
 
