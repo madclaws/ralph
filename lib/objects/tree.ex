@@ -5,6 +5,7 @@ defmodule Objects.Tree do
   Tree generally saves with the detials of the blobs in
   the working directory
   """
+  alias Supervisor.Spec
   alias Objects.Blob
 
   @type children :: list(child())
@@ -69,53 +70,51 @@ defmodule Objects.Tree do
   end
 
   # def traverse_proof(_, _, result) when not is_nil(result), do: result
-  def traverse_proof(tree, search_oid, prf_list) do
+  def traverse_proof(tree, search_oid, has_found \\ false, prf_list \\ []) do
     # |> IO.inspect(label: :traverse_res)
-    {search_oid, prf_list} =
-      res = do_traverse_proof(tree, search_oid, prf_list)
-
-    if Enum.empty?(prf_list) do
-      child =
-        Enum.find(tree.entries, fn {_, entry} ->
-          entry.oid == search_oid
-        end)
-
-      if not is_nil(child) do
-        siblings =
-          Enum.filter(tree.entries, fn {_, entry} -> entry.oid != search_oid end)
-          |> Enum.map(&elem(&1, 1).oid)
-
-        {tree.oid, prf_list ++ siblings}
-      else
-        res
-      end
-    else
-      res
-    end
+    find_piblings(tree, search_oid, has_found, prf_list)
   end
 
-  defp do_traverse_proof(tree, search_oid, prf_list) do
-    Enum.reduce(tree.entries, {search_oid, prf_list}, fn {_name, entry}, {search_oid, prf_list} ->
-      if is_struct(entry, __MODULE__) do
-        # find the siblings and add it to the prf_list
-        Enum.find(entry.entries, fn {_, entry} ->
-          entry.oid == search_oid
-        end)
-        |> case do
-          nil ->
-            do_traverse_proof(entry, search_oid, prf_list ++ [entry.oid])
-
-          child ->
-            siblings =
-              Enum.filter(entry.entries, fn {_, entry} -> entry.oid != search_oid end)
-              |> Enum.map(&elem(&1, 1).oid)
-
-            {entry.oid, prf_list ++ siblings}
+  # TODO: Enum.reduce_while for early exit as opt
+  defp do_traverse_proof(tree, search_oid, has_found, prf_list) do
+    Enum.reduce(tree.entries, {search_oid, has_found, prf_list}, fn
+      {_name, entry}, {search_oid, false = has_found, prf_list} = res ->
+        if is_struct(entry, __MODULE__) do
+          find_piblings(entry, search_oid, has_found, prf_list)
+        else
+          if entry.oid == search_oid do
+            {search_oid, true, prf_list}
+          else
+            {search_oid, has_found, prf_list}
+          end
         end
-      else
-        {search_oid, prf_list}
-      end
+
+      # |> IO.inspect(label: :end_reducer)
+
+      {_, _}, {_, true, _} = res ->
+        res
     end)
+  end
+
+  @spec find_piblings(Object.t(), binary(), boolean(), list()) ::
+          {search_oid :: binary(), has_found :: boolean(), prf_list :: list()}
+  defp find_piblings(entry, search_oid, has_found, prf_list) do
+    case do_traverse_proof(entry, search_oid, has_found, prf_list) do
+      {search_oid, true, prf_list} ->
+        list =
+          Enum.reduce(entry.entries, [], fn {_, child}, prfs ->
+            if child.oid != search_oid do
+              prfs ++ [child.oid]
+            else
+              prfs
+            end
+          end)
+
+        {entry.oid, true, prf_list ++ list}
+
+      res ->
+        res
+    end
   end
 
   # Recursively adds Blobs to the tree
