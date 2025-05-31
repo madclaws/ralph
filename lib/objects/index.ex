@@ -1,6 +1,6 @@
 defmodule Objects.Index do
   @moduledoc """
-  
+
   """
 
   @type t :: %__MODULE__{
