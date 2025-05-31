@@ -5,7 +5,6 @@ defmodule Objects.Tree do
   Tree generally saves with the detials of the blobs in
   the working directory
   """
-  alias Supervisor.Spec
   alias Objects.Blob
 
   @type children :: list(child())
@@ -72,13 +71,13 @@ defmodule Objects.Tree do
   # def traverse_proof(_, _, result) when not is_nil(result), do: result
   def traverse_proof(tree, search_oid, has_found \\ false, prf_list \\ []) do
     # |> IO.inspect(label: :traverse_res)
-    find_piblings(tree, search_oid, has_found, prf_list)
+    find_piblings(tree, search_oid,has_found, prf_list)
   end
 
   # TODO: Enum.reduce_while for early exit as opt
   defp do_traverse_proof(tree, search_oid, has_found, prf_list) do
     Enum.reduce(tree.entries, {search_oid, has_found, prf_list}, fn
-      {_name, entry}, {search_oid, false = has_found, prf_list} = res ->
+      {_name, entry}, {search_oid, false = has_found, prf_list} = _res ->
         if is_struct(entry, __MODULE__) do
           find_piblings(entry, search_oid, has_found, prf_list)
         else
