@@ -68,7 +68,24 @@ defmodule Objects.Tree do
     end)
   end
 
-  def traverse_proof(tree, search_oid, has_found \\ false, prf_list \\ []) do
+  @doc """
+  Generates the merkle proof for the given snapshot tree
+
+  tree - The root tree
+  search_oid - Object OID of the file we need to generate proof for
+  has_found - Did we found the file
+  prf_list - The list of siblings/piblings which essentially forms the proof
+
+  How it works
+  We do a DFS to find the object with `search_oid`
+  Once we get it we set the has_found to true and search_oid as the parent's oid.
+  We do the latter so that as we go up we can eliminate the parents from including it
+  in the prf list
+
+  Also once we found the oid we don't bother going deep in further sub-trees
+  """
+  @spec generate_proof(__MODULE__.t(), binary(), boolean(), list(binary)) :: list(binary())
+  def generate_proof(tree, search_oid, has_found \\ false, prf_list \\ []) do
     find_piblings(tree, search_oid, has_found, prf_list)
   end
 
